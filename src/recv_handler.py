@@ -140,13 +140,14 @@ class RecvHandler:
             sub_type = raw_message.get("sub_type")
             if sub_type == MessageType.Group.normal:
                 sender_info: dict = raw_message.get("sender")
-                
+                member_info: dict = await get_member_info(self.server_connection, group_id=raw_message.get("group_id"), user_id=sender_info.get("user_id"))
+                cardname = member_info['title'] or sender_info.get("card")
                 # 发送者用户信息
                 user_info: UserInfo = UserInfo(
                     platform=global_config.platform,
                     user_id=sender_info.get("user_id"),
                     user_nickname=sender_info.get("nickname"),
-                    user_cardname=sender_info.get("card"),
+                    user_cardname=cardname,
                 )
 
                 # 获取群聊相关信息，在此单独处理group_name，因为默认发送的消息中没有
@@ -373,13 +374,13 @@ class RecvHandler:
         """
         message_id = raw_message.get("data").get("id")
         message_detail: dict = await get_message_detail(self.server_connection, message_id)
-        raw_message: str = message_detail.get("raw_message")
+        reply_message: str = message_detail.get("raw_message")
         sender_info: dict = message_detail.get("sender")
         sender_nickname: str = sender_info.get("nickname")
         sender_id: str = sender_info.get("user_id")
         if not sender_nickname:
             logger.warning("无法获取被引用的人的昵称，返回默认值")
-            return Seg(type="text", data=f"[回复 QQ用户(未知id)：{raw_message}]，说：")
+            return Seg(type="text", data=f"[回复 QQ用户(未知id)：{reply_message}]，说：")
         else:
             return Seg(type="text", data=f"[回复 {sender_nickname}({sender_id})：{raw_message}]，说：")
 
