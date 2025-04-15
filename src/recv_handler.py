@@ -226,6 +226,12 @@ class RecvHandler:
                         logger.warning("text处理失败")
                 case RealMessageType.face:
                     pass
+                case RealMessageType.reply:
+                    ret_seg = await self.handle_reply_message(sub_message)
+                    if ret_seg:
+                        seg_message += ret_seg
+                    else:
+                        logger.warning("reply处理失败")
                 case RealMessageType.image:
                     ret_seg = await self.handle_image_message(sub_message)
                     if ret_seg:
@@ -261,12 +267,6 @@ class RecvHandler:
                 case RealMessageType.share:
                     logger.warning("暂时不支持链接解析")
                     pass
-                case RealMessageType.reply:
-                    ret_seg = await self.handle_reply_message(sub_message)
-                    if ret_seg:
-                        seg_message.append(ret_seg)
-                    else:
-                        logger.warning("reply处理失败")
                 case RealMessageType.forward:
                     forward_message_id = sub_message.get("data").get("id")
                     request_uuid = str(uuid.uuid4())
@@ -390,15 +390,22 @@ class RecvHandler:
         if not message_detail:
             logger.warning("获取被引用的消息详情失败")
             return None
-        reply_message: str = message_detail.get("raw_message")
+        reply_message = await self.handle_real_message(message_detail)
         sender_info: dict = message_detail.get("sender")
         sender_nickname: str = sender_info.get("nickname")
         sender_id: str = sender_info.get("user_id")
+        seg_message: List[Seg] = []
         if not sender_nickname:
             logger.warning("无法获取被引用的人的昵称，返回默认值")
-            return Seg(type="text", data=f"[回复 QQ用户(未知id)：{reply_message}]，说：")
+            seg_message.append(Seg(type="text", data=f"[回复 QQ用户(未知id)："))
+            seg_message += reply_message
+            seg_message.append(Seg(type="text", data=f"]，说："))
+            return seg_message
         else:
-            return Seg(type="text", data=f"[回复 {sender_nickname}({sender_id})：{reply_message}]，说：")
+            seg_message.append(Seg(type="text", data=f"[回复 {sender_nickname}({sender_id}："))
+            seg_message += reply_message
+            seg_message.append(Seg(type="text", data=f"]，说："))
+            return seg_message
 
     async def handle_notice(self, raw_message: dict) -> None:
         notice_type = raw_message.get("notice_type")
