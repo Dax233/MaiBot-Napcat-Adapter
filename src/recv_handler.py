@@ -298,6 +298,9 @@ class RecvHandler:
                         if len(json.dumps(response)) > 80
                         else json.dumps(response)
                     )
+                    if response.get("status") == "failed":
+                        logger.warning("转发消息获取失败")
+                        return None
                     messages = response.get("data").get("messages")
                     if not messages:
                         logger.warning("转发消息内容为空或获取失败")
@@ -633,7 +636,7 @@ class RecvHandler:
         """
         seg_list = []
         image_count = 0
-        if message_list is None or len(message_list) == 0:
+        if message_list is None:
             return None, 0
         for sub_message in message_list:
             sub_message: dict
@@ -641,7 +644,11 @@ class RecvHandler:
             user_nickname: str = sender_info.get("nickname", "QQ用户")
             user_nickname_str = f"【{user_nickname}】:"
             break_seg = Seg(type="text", data="\n")
-            message_of_sub_message: dict = sub_message.get("message")[0]
+            message_of_sub_message_list: dict = sub_message.get("message")
+            if not message_of_sub_message_list:
+                logger.warning("转发消息内容为空")
+                continue
+            message_of_sub_message = message_of_sub_message_list[0]
             if message_of_sub_message.get("type") == RealMessageType.forward:
                 if layer >= 3:
                     full_seg_data = (
