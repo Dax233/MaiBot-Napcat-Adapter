@@ -464,7 +464,7 @@ class RecvHandler:
 
         source_name: str = None
         source_cardname: str = None
-        if group_id != "None":
+        if group_id and group_id != "None":
             member_info: dict = await get_member_info(self.server_connection, group_id, user_id)
             if member_info:
                 source_name = member_info.get("nickname")
@@ -558,7 +558,6 @@ class RecvHandler:
             type="text",
             data=f"{first_txt}{target_name}{second_txt}（这是一个类似摸摸头的友善行为，不是恶意行为，请不要作出攻击发言）",
         )
-        print(f"{first_txt}{target_name}{second_txt}（这是一个类似摸摸头的友善行为，不是恶意行为，请不要作出攻击发言）")
         return seg_data
 
     async def handle_forward_message(self, message_list: list) -> Seg:
