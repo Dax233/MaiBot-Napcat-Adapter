@@ -453,6 +453,7 @@ class RecvHandler:
                 match sub_type:
                     case NoticeType.Notify.poke:
                         handled_message: Seg = await self.handle_poke_notify(raw_message)
+                        print(raw_message)
                     case _:
                         logger.warning("不支持的notify类型")
             case _:
@@ -537,8 +538,8 @@ class RecvHandler:
         else:
             return None
         try:
-            first_txt = raw_info[2].get("text", "戳了戳")
-            second_txt = raw_info[4].get("text", "")
+            first_txt = raw_info[2].get("txt", "戳了戳")
+            second_txt = raw_info[4].get("txt", "")
         except Exception as e:
             logger.warning(f"解析戳一戳消息失败，使用默认文本：{str(e)}")
             first_txt = "戳了戳"
