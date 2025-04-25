@@ -453,7 +453,6 @@ class RecvHandler:
                 match sub_type:
                     case NoticeType.Notify.poke:
                         handled_message: Seg = await self.handle_poke_notify(raw_message)
-                        print(raw_message)
                     case _:
                         logger.warning("不支持的notify类型")
             case _:
