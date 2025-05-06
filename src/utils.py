@@ -1,13 +1,12 @@
-import websockets.asyncio.server as Server
+import websockets as Server
 import json
 import base64
 import uuid
 from .logger import logger
 from .message_queue import get_response
 import urllib3
-# import requests
+# import urllib3
 import ssl
-# from requests.adapters import HTTPAdapter
 
 from PIL import Image
 import io
