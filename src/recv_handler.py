@@ -146,7 +146,7 @@ class RecvHandler:
             if sub_type == MessageType.Group.normal:
                 sender_info: dict = raw_message.get("sender")
                 member_info: dict = await get_member_info(self.server_connection, group_id=raw_message.get("group_id"), user_id=sender_info.get("user_id"))
-                cardname = member_info['title'] if member_info['title'] else sender_info.get("card")
+                cardname = member_info['title'] if member_info and member_info['title'] else sender_info.get("card")
                 # 发送者用户信息
                 user_info: UserInfo = UserInfo(
                     platform=global_config.platform,
