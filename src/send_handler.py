@@ -108,6 +108,9 @@ class SendHandler:
         elif seg.type == "voice":
             voice = seg.data
             new_payload = self.build_payload(payload, self.handle_voice_message(voice), False)
+        elif seg.type == "at":
+            user_id = seg.data
+            new_payload = self.build_payload(payload, self.handle_at_message(user_id), False)
         return new_payload
 
     def build_payload(self, payload: list, addon: dict, is_reply: bool = False) -> list:
@@ -164,6 +167,11 @@ class SendHandler:
             "type": "record",
             "data": {"file": f"base64://{encoded_voice}"},
         }
+
+    def handle_at_message(self, user_id: str) -> dict:
+        """处理文本消息"""
+        ret = {"type": "at", "data": {"qq": user_id}}
+        return ret
 
     async def send_message_to_napcat(self, action: str, params: dict) -> dict:
         request_uuid = str(uuid.uuid4())
