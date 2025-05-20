@@ -146,13 +146,14 @@ class RecvHandler:
             if sub_type == MessageType.Group.normal:
                 sender_info: dict = raw_message.get("sender")
                 member_info: dict = await get_member_info(self.server_connection, group_id=raw_message.get("group_id"), user_id=sender_info.get("user_id"))
-                cardname = member_info['title'] if member_info and member_info['title'] else sender_info.get("card")
+                titlename = member_info['title'] if member_info and member_info['title'] else None
                 # 发送者用户信息
                 user_info: UserInfo = UserInfo(
                     platform=global_config.platform,
                     user_id=sender_info.get("user_id"),
                     user_nickname=sender_info.get("nickname"),
-                    user_cardname=cardname,
+                    user_cardname=sender_info.get("card"),
+                    user_titlename=titlename,
                 )
 
                 # 获取群聊相关信息，在此单独处理group_name，因为默认发送的消息中没有
