@@ -9,7 +9,7 @@ from typing import List, Tuple
 import uuid
 
 from . import MetaEventType, RealMessageType, MessageType, NoticeType
-from maim_message import (
+from ...maim_message.src.maim_message import (
     UserInfo,
     GroupInfo,
     Seg,

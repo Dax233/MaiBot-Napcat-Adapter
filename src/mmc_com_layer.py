@@ -1,4 +1,4 @@
-from maim_message import Router, RouteConfig, TargetConfig
+from ...maim_message.src.maim_message import Router, RouteConfig, TargetConfig
 from .config import global_config
 from .logger import logger
 from .send_handler import send_handler

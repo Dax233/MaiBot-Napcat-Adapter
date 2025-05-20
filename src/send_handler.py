@@ -7,7 +7,7 @@ import uuid
 from .message_queue import get_response
 from .logger import logger
 
-from maim_message import (
+from ...maim_message.src.maim_message import (
     UserInfo,
     GroupInfo,
     Seg,
