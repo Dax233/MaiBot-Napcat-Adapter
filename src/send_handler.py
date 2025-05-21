@@ -34,10 +34,13 @@ class SendHandler:
         processed_message: list = []
         logger.info("接收到来自MaiBot的消息，处理中")
         try:
-            processed_message = await self.handle_seg_recursive(message_segment)
+            processed_message, poke_user_id = await self.handle_seg_recursive(message_segment)
         except Exception as e:
             logger.error(f"处理消息时发生错误: {e}")
             return
+
+        if poke_user_id:
+            await self.handle_poke_action(poke_user_id, group_info, user_info)
 
         if processed_message:
             if group_info and user_info:
@@ -63,6 +66,8 @@ class SendHandler:
                 logger.info("消息发送成功")
             else:
                 logger.warning(f"消息发送失败，napcat返回：{str(response)}")
+        elif poke_user_id:
+            pass  # 戳一戳动作已完成，此处跳过即可
         else:
             logger.critical("现在暂时不支持解析此回复！")
             return None
@@ -80,12 +85,12 @@ class SendHandler:
             if not seg_data.data:
                 return []
             for seg in seg_data.data:
-                payload = self.process_message_by_type(seg, payload)
+                payload, poke_user_id = self.process_message_by_type(seg, payload)
         else:
-            payload = self.process_message_by_type(seg_data, payload)
-        return payload
+            payload, poke_user_id = self.process_message_by_type(seg_data, payload)
+        return payload, poke_user_id
 
-    def process_message_by_type(self, seg: Seg, payload: list) -> list:
+    def process_message_by_type(self, seg: Seg, payload: list, poke_user_id: str = None) -> list:
         new_payload = payload
         if seg.type == "reply":
             target_id = seg.data
@@ -111,7 +116,9 @@ class SendHandler:
         elif seg.type == "at":
             user_id = seg.data
             new_payload = self.build_payload(payload, self.handle_at_message(user_id), False)
-        return new_payload
+        elif seg.type == "poke":
+            poke_user_id = seg.data
+        return new_payload, poke_user_id
 
     def build_payload(self, payload: list, addon: dict, is_reply: bool = False) -> list:
         """构建发送的消息体"""
@@ -169,9 +176,27 @@ class SendHandler:
         }
 
     def handle_at_message(self, user_id: str) -> dict:
-        """处理文本消息"""
+        """处理 @ 消息"""
         ret = {"type": "at", "data": {"qq": user_id}}
         return ret
+
+    async def handle_poke_action(self, user_id: str, group_info: GroupInfo, user_info: UserInfo) -> dict:
+        """处理戳一戳动作"""
+        if group_info and user_info:
+            action = "group_poke"
+            payload = {"group_id": group_info.group_id, "user_id": user_id}
+        elif user_info:
+            action = "friend_poke"
+            payload = {"user_id": user_id}
+        logger.info("尝试发送到napcat")
+        response = await self.send_message_to_napcat(
+            action,
+            payload
+        )
+        if response.get("status") == "ok":
+            logger.info("戳一戳发送成功")
+        else:
+            logger.warning(f"戳一戳发送失败，napcat返回：{str(response)}")
 
     async def send_message_to_napcat(self, action: str, params: dict) -> dict:
         request_uuid = str(uuid.uuid4())
