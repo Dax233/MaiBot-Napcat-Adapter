@@ -38,7 +38,6 @@ class SendHandler:
         except Exception as e:
             logger.error(f"处理消息时发生错误: {e}")
             return
-
         if poke_user_id:
             await self.handle_poke_action(poke_user_id, group_info, user_info)
 
@@ -80,15 +79,20 @@ class SendHandler:
 
     async def handle_seg_recursive(self, seg_data: Seg) -> list:
         payload: list = []
+        current_poke_user_id: str = None
         if seg_data.type == "seglist":
             # level = self.get_level(seg_data)  # 给以后可能的多层嵌套做准备，此处不使用
             if not seg_data.data:
                 return []
             for seg in seg_data.data:
                 payload, poke_user_id = self.process_message_by_type(seg, payload)
+                if poke_user_id:
+                    current_poke_user_id = poke_user_id
         else:
             payload, poke_user_id = self.process_message_by_type(seg_data, payload)
-        return payload, poke_user_id
+            if poke_user_id:
+                current_poke_user_id = poke_user_id
+        return payload, current_poke_user_id
 
     def process_message_by_type(self, seg: Seg, payload: list, poke_user_id: str = None) -> list:
         new_payload = payload
